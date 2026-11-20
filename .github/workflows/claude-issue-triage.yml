@@ -1,0 +1,71 @@
+name: Claude Issue Triage
+
+on:
+  issues:
+    types: [opened, edited]
+
+concurrency:
+  group: claude-triage-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  triage:
+    # Solo issues (no PRs), no disparado por el bot, y en "edited" solo si cambió título o cuerpo
+    if: |
+      github.event.issue.pull_request == null &&
+      github.actor != 'github-actions[bot]' &&
+      (github.event.action == 'opened' ||
+       github.event.changes.title != null ||
+       github.event.changes.body != null)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Triage con Claude
+        uses: anthropics/claude-code-action@v1
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            ISSUE: #${{ github.event.issue.number }}
+            EVENTO: ${{ github.event.action }}
+
+            Eres el encargado de triage de este repositorio (Tetris en JavaScript vanilla + Canvas; ver CLAUDE.md).
+
+            1. Lee el issue: `gh issue view ${{ github.event.issue.number }} --json title,body,labels,comments`.
+            2. Lee CLAUDE.md y el código relevante (index.html, style.css, game.js) para ubicar el problema.
+            3. Labels: ejecuta `gh label list` y elige SOLO entre los labels existentes. No crees labels nuevos.
+               Aplica con `gh issue edit ${{ github.event.issue.number }} --add-label "<label>"`.
+               Si el evento es "edited" y algún label que antes aplicaba ya no corresponde, quítalo con `--remove-label`.
+            4. Escribe el diagnóstico en español, en Markdown, en el archivo `diag.md`.
+               La PRIMERA línea debe ser exactamente `<!-- claude-triage -->`. Estructura:
+
+               ## 🔍 Diagnóstico automático
+               - **Tipo**: bug / mejora / pregunta / documentación
+               - **Resumen**: 1-2 frases
+               - **Área afectada**: archivos y funciones concretas (ej. `game.js` → `tryRotate()`, `collide()`)
+               - **Causa probable** (si es bug) o **Diseño propuesto** (si es feature)
+               - **Propuesta de solución**: pasos concretos de implementación
+               - **Criterios de aceptación**: checklist verificable jugando en el navegador
+               - **Riesgos / restricciones**: ej. COLS/ROWS/BLOCK vs tamaño del canvas en index.html
+               - **Preguntas abiertas**: información que falte del reporter
+
+            5. Publica el diagnóstico en un único comentario:
+               - Busca uno existente:
+                 `gh api repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments --jq '.[] | select(.body | startswith("<!-- claude-triage -->")) | .id'`
+               - Si existe: `gh api -X PATCH repos/${{ github.repository }}/issues/comments/<id> -F body=@diag.md`
+               - Si no existe: `gh issue comment ${{ github.event.issue.number }} --body-file diag.md`
+
+            Restricciones: no modifiques código, no abras PRs, no cierres el issue.
+          claude_args: |
+            --allowedTools "Read,Glob,Grep,Write,Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue comment:*),Bash(gh label list:*),Bash(gh api:*)"
