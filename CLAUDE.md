@@ -29,6 +29,8 @@ Tres archivos: `index.html` (DOM: `#board` canvas, panel HUD, `#next-canvas`, `#
 - **Puntuación/nivel**: `LINE_SCORES[cleared] * level`; hard drop +2/celda, soft drop +1/fila; nivel = `floor(lines/10)+1`; `dropInterval = max(100, 1000 - (level-1)*90)`.
 - **Render**: `draw()` redibuja todo cada frame (grid → board → ghost con alpha 0.2 → pieza actual). `drawBlock` sirve para ambos canvas vía parámetro `context`/`size`.
 
+- **Temas**: colores en variables CSS (`:root` = oscuro por defecto, `[data-theme="light"]` = claro) en `style.css`. `applyTheme()` en `game.js` fija `document.documentElement.dataset.theme`, lee `--grid` y `--ghost-alpha` en las variables JS `gridColor`/`ghostAlpha` (usadas por `drawGrid`/ghost) y persiste en `localStorage` (`tetris-theme`). El botón `#theme-toggle` hace `blur()` tras el click para que Espacio siga siendo hard drop. Nuevos colores de UI deben ir como variables, no hardcodeados.
+
 ## Restricciones
 
 - Si cambian `COLS`, `ROWS` o `BLOCK`, ajustar `width`/`height` de `<canvas id="board">` en `index.html` (`COLS*BLOCK` × `ROWS*BLOCK`).
