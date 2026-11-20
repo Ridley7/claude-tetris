@@ -47,7 +47,12 @@ jobs:
             3. Labels: ejecuta `gh label list` y elige SOLO entre los labels existentes. No crees labels nuevos.
                Aplica con `gh issue edit ${{ github.event.issue.number }} --add-label "<label>"`.
                Si el evento es "edited" y algún label que antes aplicaba ya no corresponde, quítalo con `--remove-label`.
-            4. Escribe el diagnóstico en español, en Markdown, en el archivo `diag.md`.
+            4. Escribe el diagnóstico en español, en el archivo `diag.md`.
+               El contenido debe ser GitHub Flavored Markdown (GFM) válido, que GitHub renderice correctamente:
+               - Saltos de línea reales (no `\n` literales) y una línea en blanco entre encabezados, párrafos y listas.
+               - Encabezados con `##`/`###`, listas con `-`, checklists con `- [ ]`, negritas con `**`.
+               - Código inline con backticks y bloques con triple backtick indicando lenguaje (ej. ```js).
+               - Sin HTML salvo el marcador inicial; no envuelvas todo el comentario en un bloque de código.
                La PRIMERA línea debe ser exactamente `<!-- claude-triage -->`. Estructura:
 
                ## 🔍 Diagnóstico automático
