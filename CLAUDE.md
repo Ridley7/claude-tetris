@@ -21,7 +21,7 @@ Tres archivos: `index.html` (DOM: `#board` canvas, panel HUD, `#next-canvas`, `#
 
 `game.js` es un script clásico (no módulo) con estado global mutable en variables `let` a nivel de archivo (`board`, `current`, `next`, `score`, `lines`, `level`, `paused`, `gameOver`, `dropAccum`, `dropInterval`, `animId`). `init()` resetea todo y también es el handler del botón reiniciar.
 
-- **Modelo**: `board` es matriz `ROWS × COLS`; cada celda `0` o índice de color 1–7. Las piezas en `PIECES` son matrices cuadradas cuyas celdas ya contienen su índice de tipo, por lo que `merge()` copia el valor directamente y `COLORS[i]` da el color. `PIECES`/`COLORS` están indexados desde 1 (`[0]` es `null`) — mantener alineados.
+- **Modelo**: `board` es matriz `ROWS × COLS`; cada celda `0` o índice de color 1–8 (8 = "tuerca", pieza reto 3×3 con hueco central). `randomPiece` elige uniforme entre `PIECES.length - 1` tipos. Las piezas en `PIECES` son matrices cuadradas cuyas celdas ya contienen su índice de tipo, por lo que `merge()` copia el valor directamente y `COLORS[i]` da el color. `PIECES`/`COLORS` están indexados desde 1 (`[0]` es `null`) — mantener alineados.
 - **Piezas**: `{ type, shape, x, y }`. Rotación = `rotateCW` + wall kicks `[0,-1,1,-2,2]` en `tryRotate`. Solo rotación horaria; no es SRS.
 - **Colisión**: `collide(shape, ox, oy)` permite `ny < 0` (celdas sobre el tablero).
 - **Loop**: `requestAnimationFrame` acumula `dt` en `dropAccum`; al superar `dropInterval` baja una fila o llama `lockPiece()` → `merge()` → `clearLines()` → `spawn()`. `spawn()` dispara `endGame()` si la pieza nueva colisiona.
